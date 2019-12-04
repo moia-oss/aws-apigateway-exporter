@@ -1,0 +1,51 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/moia-dev/aws-apigateway-metrics-exporter
+    steps:
+      - checkout
+      - run: make dependencies
+      - run: make lint
+
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/moia-dev/aws-apigateway-metrics-exporter
+    steps:
+      - checkout
+      - run: make build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./*
+  push:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/moia-dev/aws-apigateway-metrics-exporter
+    steps:
+      - attach_workspace:
+          at: .
+      - setup_remote_docker
+      - run: sudo apt-get install -yq python-pip
+      - run: sudo pip install awscli
+      - run:
+          name: Set up AWS credentials
+          command: echo "export $PRD_CI_AWS_CREDENTIALS" >> $BASH_ENV
+      - run: make docker-push
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
+      - push:
+          filters:
+            branches:
+              only: master
+          requires:
+            - build

@@ -1,0 +1,4 @@
+bin/
+.idea/
+cover.out
+golangci-lint
