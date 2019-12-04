@@ -7,7 +7,7 @@ RUN make build-linux
 FROM alpine:3.10
 RUN apk add --no-cache ca-certificates
 COPY --from=0 /exporter/bin/linux_amd64/aws-apigateway-exporter \
-    /bin/aws-apigateway-metrics-exporter
+    /bin/aws-apigateway-exporter
 
 ENV USER=appuser
 ENV GROUP=appusers
