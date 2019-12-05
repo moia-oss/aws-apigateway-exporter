@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/moia-dev/aws-apigateway-exporter.svg?style=svg&circle-token=dd82a9ad720305dcb160a552f1aab356d13ad46c)](https://circleci.com/gh/moia-dev/aws-apigateway-exporter)
 
-Prometheus Exporter for details of AWS API Gateway metrics that are not available through through CloudWatch but are
+Prometheus Exporter for details of AWS API Gateway metrics that are not available through CloudWatch but are
 available via the API. Currently implemented are metrics about the client certificates and usage plans, especially
 the `created_date` and `expiry_date` of each certificate.
 
