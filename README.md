@@ -40,7 +40,7 @@ Every commit on `master` gets pushed as a new image with the `latest` tag.
 
 We recommend to use tagged versions in production.
 
-You can find the available tags on [Docker Hub](https://hub.docker.com/repository/docker/moia/aws-apigateway-exporter).
+You can find the available tags on [Docker Hub](https://hub.docker.com/r/moia/aws-apigateway-exporter).
 
 In order to tag a new version do the following:
 
