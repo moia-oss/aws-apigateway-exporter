@@ -111,7 +111,7 @@ func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metri
 					}
 				}
 			}
-			return lastPage
+			return !lastPage
 		})
 }
 
@@ -164,7 +164,7 @@ func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) err
 				}
 			}
 
-			return lastPage
+			return !lastPage
 		})
 }
 
