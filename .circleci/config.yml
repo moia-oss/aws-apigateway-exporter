@@ -1,16 +1,16 @@
 version: 2
 jobs:
-  lint:
+  build:
     docker:
       - image: circleci/golang:1.14
     working_directory: /go/src/github.com/moia-dev/aws-apigateway-exporter
     steps:
       - checkout
       - run: make lint
+      - run: make build-linux
 
 workflows:
   version: 2
   ci:
     jobs:
-      - lint
-
+      - build
