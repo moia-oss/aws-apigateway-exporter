@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
-	github.com/aws/aws-sdk-go v1.30.1
+	github.com/aws/aws-sdk-go v1.30.18
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/prometheus/client_golang v1.5.1
