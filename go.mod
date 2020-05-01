@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.30.1
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/prometheus/client_golang v1.5.1
+	github.com/prometheus/client_golang v1.6.0
 	github.com/prometheus/common v0.9.1
 	github.com/prometheus/procfs v0.0.11 // indirect
 	github.com/sirupsen/logrus v1.5.0 // indirect
