@@ -1,4 +1,4 @@
-FROM golang:1.14.4
+FROM golang:1.14.6
 COPY ./ /exporter/
 WORKDIR /exporter
 RUN pwd
