@@ -2,9 +2,8 @@
 github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d
-## explicit
 github.com/alecthomas/units
-# github.com/aws/aws-sdk-go v1.33.17
+# github.com/aws/aws-sdk-go v1.34.14
 ## explicit
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
@@ -67,7 +66,7 @@ github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
 # github.com/prometheus/client_model v0.2.0
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.10.0
+# github.com/prometheus/common v0.13.0
 ## explicit
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
@@ -78,17 +77,14 @@ github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
 # github.com/sirupsen/logrus v1.6.0
-## explicit
 github.com/sirupsen/logrus
-# golang.org/x/sys v0.0.0-20200802091954-4b90ce9b60b3
+# golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a
 ## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
 golang.org/x/sys/windows/svc/eventlog
-# golang.org/x/text v0.3.2
-## explicit
 # google.golang.org/protobuf v1.25.0
 ## explicit
 google.golang.org/protobuf/encoding/prototext
