@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - use_public_ecr
 
 jobs:
   push-image:
