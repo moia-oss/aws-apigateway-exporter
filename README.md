@@ -1,9 +1,7 @@
 # aws-apigateway-exporter
 
-[![CircleCI](https://circleci.com/gh/moia-dev/aws-apigateway-exporter.svg?style=svg&circle-token=dd82a9ad720305dcb160a552f1aab356d13ad46c)](https://circleci.com/gh/moia-dev/aws-apigateway-exporter)
-
 Prometheus Exporter for details of AWS API Gateway metrics that are not available through CloudWatch but are
-available via the API. Currently implemented are metrics about the client certificates and usage plans, especially
+available via the API. Currently, implemented are metrics about the client certificates and usage plans, especially
 the `created_date` and `expiry_date` of each certificate.
 
 The following metrics are then made available with the prefix `aws_apigateway_exporter_`.
@@ -16,8 +14,6 @@ All metrics are gauge values:
 * `quota_limit` with dimensions `usage_plan_id`, and `usage_plan_name`
 
 ## Building and running
-
-Make sure your machine has Go 1.13 installed, then run `make docker-build` to build.
 
 This service also needs the following AWS permissions:
 
@@ -32,15 +28,30 @@ Resource:
   - "arn:aws:apigateway:eu-central-1::/usageplans*"
 ```
 
-`docker run -p 9389:9389 moia/aws-apigateway-exporter` to run. Then Prometheus can scrape port 9389 for these metrics.
+Make sure your machine has Go 1.15 installed, then run `make docker-build` to build the service as well 
+as the docker image. You can also just use the provided docker images:
+https://gallery.ecr.aws/moia-oss/aws-apigateway-exporter
 
-## Versioning on Docker Hub
+For running the latest provided image:
+`docker run -p 9389:9389 public.ecr.aws/moia-oss/aws-apigateway-exporter:latest`
+
+For running a local image:
+`docker run -p 9389:9389 moia/aws-apigateway-exporter`.
+
+Then Prometheus can scrape port 9389 for these metrics.
+
+## Versioning on Public ECR
+
+With version `0.6.2` this project switches from Dockerhub to AWS ECR Public Gallery, in order to
+work around the limits from Dockerhub and because we assume that this is mainly used in AWS environments.
 
 Every commit on `master` gets pushed as a new image with the `latest` tag.
 
 We recommend to use tagged versions in production.
 
-You can find the available tags on [Docker Hub](https://hub.docker.com/r/moia/aws-apigateway-exporter).
+You can find the available tags on [AWS ECR Public Gallery](https://gallery.ecr.aws/moia-oss/aws-apigateway-exporter).
+
+### Pushing a versioned image
 
 In order to tag a new version do the following:
 
