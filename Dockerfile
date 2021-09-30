@@ -1,7 +1,6 @@
-FROM golang:1.17.0
+FROM golang:1.17.1
 COPY ./ /exporter/
 WORKDIR /exporter
-RUN pwd
 RUN make build-linux
 
 FROM alpine:3.14.2
