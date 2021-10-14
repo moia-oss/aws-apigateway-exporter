@@ -32,7 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/log"
+	"go.uber.org/zap"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -45,6 +45,9 @@ var (
 	BuildTime = "N/A"
 	// Version represents the Build SHA-1 of the binary
 	Version = "N/A"
+
+	logger *zap.Logger
+	sugar  *zap.SugaredLogger
 )
 
 // Exporter collects metrics for API Gateway client certificates.
@@ -75,14 +78,14 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	err := e.collectUsageMetrics(&up, ch)
 	if err != nil {
 		up = 0
-		log.Error("Failed to get usage plans")
+		sugar.Error("Failed to get usage plans")
 	}
 
 	err = e.collectCertificateMetrics(&up, ch)
 
 	if err != nil {
 		up = 0
-		log.Errorf("Failed to get api gateways %s", err)
+		sugar.Errorf("Failed to get api gateways %s", err)
 	}
 	ch <- prometheus.MustNewConstMetric(e.up, prometheus.GaugeValue, float64(up))
 }
@@ -94,7 +97,7 @@ func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metri
 				stagesResponse, stageErr := e.apigateway.GetStages(&apigateway.GetStagesInput{RestApiId: restAPI.Id})
 				if stageErr != nil {
 					*up = 0
-					log.Errorf("Failed to get stages for API Gateway %s: %s", *restAPI.Id, stageErr)
+					sugar.Errorf("Failed to get stages for API Gateway %s: %s", *restAPI.Id, stageErr)
 					continue
 				}
 
@@ -103,7 +106,7 @@ func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metri
 						cert, err := e.apigateway.GetClientCertificate(&apigateway.GetClientCertificateInput{ClientCertificateId: stage.ClientCertificateId})
 						if err != nil {
 							*up = 0
-							log.Errorf("Failed to get client certificates %s for API Gateway %s: %s", *stage.ClientCertificateId, *restAPI.Id, err)
+							sugar.Errorf("Failed to get client certificates %s for API Gateway %s: %s", *stage.ClientCertificateId, *restAPI.Id, err)
 							continue
 						}
 						ch <- prometheus.MustNewConstMetric(e.expirationDate, prometheus.GaugeValue, float64(cert.ExpirationDate.Unix()), *cert.ClientCertificateId, *restAPI.Name)
@@ -116,7 +119,7 @@ func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metri
 }
 
 func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) error {
-	log.Info("collecting Usage Metrics")
+	sugar.Info("collecting Usage Metrics")
 	return e.apigateway.GetUsagePlansPages(&apigateway.GetUsagePlansInput{},
 		func(page *apigateway.GetUsagePlansOutput, lastPage bool) bool {
 			for _, plan := range page.Items {
@@ -128,7 +131,7 @@ func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) err
 				})
 				if usageErr != nil {
 					*up = 0
-					log.Errorf("Failed to get usage data for API Usage Plan %s (%s): %s", *plan.Id, *plan.Name, usageErr)
+					sugar.Errorf("Failed to get usage data for API Usage Plan %s (%s): %s", *plan.Id, *plan.Name, usageErr)
 					continue
 				}
 
@@ -173,7 +176,7 @@ func registerSignals() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		log.Info("Received SIGTERM, exiting...")
+		sugar.Info("Received SIGTERM, exiting...")
 		os.Exit(1)
 	}()
 }
@@ -184,8 +187,16 @@ func main() {
 		listenAddr  = kingpin.Flag("listen-address", "The address to listen on for HTTP requests.").Default(":9389").String()
 		region      = kingpin.Flag("region", "The AWS region to use.").Default("eu-central-1").String()
 	)
+
+	logger, _ = zap.NewProduction()
+	// nolint: errcheck
+	defer logger.Sync()
+	sugar = logger.Sugar()
+
 	registerSignals()
 	kingpin.Parse()
+
+	sugar.Info("Starting...")
 
 	if *showVersion {
 		fmt.Printf("Build Time:   %s\n", BuildTime)
@@ -194,7 +205,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	log.Infof("Starting `aws-apigateway-exporter`: Build Time: '%s' Build SHA-1: '%s'\n", BuildTime, Version)
+	sugar.Infof("Starting `aws-apigateway-exporter`: Build Time: '%s' Build SHA-1: '%s'\n", BuildTime, Version)
 
 	stsSession := session.Must(session.NewSession(&aws.Config{Region: region}))
 	exporter := createExporter(stsSession, region)
@@ -214,13 +225,13 @@ func main() {
              	</body>
              </html>`))
 		if err != nil {
-			log.Errorf("Error on writing default response %s", err)
+			sugar.Errorf("Error on writing default response %s", err)
 		}
 	})
-	log.Info("Listening on", *listenAddr)
+	sugar.Info("Listening on", *listenAddr)
 	err := http.ListenAndServe(*listenAddr, mux)
 	if err != nil {
-		log.Errorf("Error on serving the requests %s", err)
+		sugar.Errorf("Error on serving the requests %s", err)
 	}
 }
 
