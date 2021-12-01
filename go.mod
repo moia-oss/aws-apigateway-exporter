@@ -3,11 +3,9 @@ module github.com/moia-dev/aws-apigateway-exporter
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.41.2
+	github.com/aws/aws-sdk-go v1.42.16
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.31.1 // indirect
-	github.com/sirupsen/logrus v1.7.0 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
 
