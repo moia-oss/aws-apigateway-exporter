@@ -1,4 +1,4 @@
-FROM golang:1.19.2
+FROM golang:1.19.3
 COPY ./ /exporter/
 WORKDIR /exporter
 RUN make build-linux
