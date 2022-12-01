@@ -5,7 +5,7 @@ github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a
 ## explicit; go 1.15
 github.com/alecthomas/units
-# github.com/aws/aws-sdk-go v1.44.127
+# github.com/aws/aws-sdk-go v1.44.150
 ## explicit; go 1.11
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
@@ -97,7 +97,7 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+# golang.org/x/sys v0.1.0
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
