@@ -29,11 +29,6 @@ build: $(LINUX_BINARIES) $(DARWIN_BINARIES)
 .PHONY: build-linux
 build-linux: $(LINUX_BINARIES)
 
-golangci-lint:
-	@curl -sSLf \
-		https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_LINT_VERSION)/golangci-lint-$(GOLANGCI_LINT_VERSION)-$(shell echo $(SYSTEM) | tr '_' '-').tar.gz \
-		| tar xzOf - golangci-lint-$(GOLANGCI_LINT_VERSION)-$(shell echo $(SYSTEM) | tr '_' '-')/golangci-lint > golangci-lint && chmod +x golangci-lint
-
 .PHONY: clean
 clean:
 	@rm -rf $(BUILD_DIR)
