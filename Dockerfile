@@ -3,7 +3,7 @@ COPY ./ /exporter/
 WORKDIR /exporter
 RUN make build-linux
 
-FROM alpine:3.17.2
+FROM alpine:3.17.3
 RUN apk add --no-cache ca-certificates
 COPY --from=0 /exporter/bin/linux_amd64/aws-apigateway-exporter \
     /bin/aws-apigateway-exporter
