@@ -7,7 +7,7 @@ GO                    := $(GO_PREFIX) go
 LINT_TARGETS          := $(shell find -name '*.go' | sed -e "s|\(.*\)/.*\.go\$$|\1/...|g" | grep -v vendor | grep -v node_modules | uniq)
 # The current version of golangci-lint.
 # See: https://github.com/golangci/golangci-lint/releases
-GOLANGCI_LINT_VERSION ?= 1.49.0
+GOLANGCI_LINT_VERSION ?= 1.51.2
 
 # Executes the linter on all our go files inside of the project
 .PHONY: lint create-golint-config
