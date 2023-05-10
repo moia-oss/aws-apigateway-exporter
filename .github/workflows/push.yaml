@@ -3,7 +3,7 @@ name: push latest image
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   push-image:
