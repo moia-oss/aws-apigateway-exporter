@@ -45,7 +45,7 @@ Then Prometheus can scrape port 9389 for these metrics.
 With version `0.6.2` this project switches from Dockerhub to AWS ECR Public Gallery, in order to
 work around the limits from Dockerhub and because we assume that this is mainly used in AWS environments.
 
-Every commit on `master` gets pushed as a new image with the `latest` tag.
+Every commit on `main` gets pushed as a new image with the `latest` tag.
 
 We recommend to use tagged versions in production.
 
