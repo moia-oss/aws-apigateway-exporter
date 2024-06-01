@@ -3,8 +3,8 @@ module github.com/moia-dev/aws-apigateway-exporter
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.51.32
-	github.com/prometheus/client_golang v1.19.0
+	github.com/aws/aws-sdk-go v1.53.14
+	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common v0.48.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
@@ -20,6 +20,6 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
