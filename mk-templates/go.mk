@@ -4,15 +4,21 @@ SYSTEM                := $(shell uname -s | tr A-Z a-z)_$(shell uname -m | sed "
 GO_PREFIX             := CGO_ENABLED=0 GOFLAGS=-mod=vendor GOPRIVATE=github.com/moia-dev
 GO                    := $(GO_PREFIX) go
 # This collects every path, which contains go files in the current project
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
 LINT_TARGETS          := $(shell find -name '*.go' | sed -e "s|\(.*\)/.*\.go\$$|\1/...|g" | grep -v vendor | grep -v node_modules | uniq)
+endif
+ifeq ($(UNAME_S),Darwin)
+LINT_TARGETS          := $(shell find . -name '*.go' | sed -e "s|\(.*\)/.*\.go\$$|\1/...|g" | grep -v vendor | grep -v node_modules | uniq)
+endif
 # The current version of golangci-lint.
 # See: https://github.com/golangci/golangci-lint/releases
-GOLANGCI_LINT_VERSION ?= 1.51.2
+GOLANGCI_LINT_VERSION ?= 1.56.2
 
 # Executes the linter on all our go files inside of the project
 .PHONY: lint create-golint-config
 lint: bin/golangci-lint-$(GOLANGCI_LINT_VERSION)
-	$(GO_PREFIX) ./bin/golangci-lint-$(GOLANGCI_LINT_VERSION) --timeout 120s run $(LINT_TARGETS)
+	$(GO_PREFIX) ./bin/golangci-lint-$(GOLANGCI_LINT_VERSION) --timeout 240s run $(LINT_TARGETS)
 
 .PHONY: create-golint-config
 create-golint-config:
