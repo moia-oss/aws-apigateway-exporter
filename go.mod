@@ -1,6 +1,6 @@
 module github.com/moia-dev/aws-apigateway-exporter
 
-go 1.20
+go 1.22
 
 require (
 	github.com/aws/aws-sdk-go v1.51.32
