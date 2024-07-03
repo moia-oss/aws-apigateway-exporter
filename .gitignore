@@ -2,3 +2,4 @@ bin/
 .idea/
 cover.out
 golangci-lint
+.DS_Store
