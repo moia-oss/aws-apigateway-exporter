@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/aws/aws-sdk-go v1.55.5
-	github.com/prometheus/client_golang v1.20.2
+	github.com/prometheus/client_golang v1.20.4
 	github.com/prometheus/common v0.55.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
