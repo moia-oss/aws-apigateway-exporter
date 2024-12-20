@@ -1,9 +1,9 @@
-FROM golang:1.23.2
+FROM golang:1.23.4
 COPY ./ /exporter/
 WORKDIR /exporter
 RUN make build-linux
 
-FROM alpine:3.20.3
+FROM alpine:3.21.0
 RUN apk add --no-cache ca-certificates
 COPY --from=0 /exporter/bin/linux_amd64/aws-apigateway-exporter \
     /bin/aws-apigateway-exporter
