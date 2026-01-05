@@ -13,7 +13,7 @@ LINT_TARGETS          := $(shell find . -name '*.go' | sed -e "s|\(.*\)/.*\.go\$
 endif
 # The current version of golangci-lint.
 # See: https://github.com/golangci/golangci-lint/releases
-GOLANGCI_LINT_VERSION ?= 1.60.3
+GOLANGCI_LINT_VERSION ?= 2.7.2
 
 # Executes the linter on all our go files inside of the project
 .PHONY: lint create-golint-config
