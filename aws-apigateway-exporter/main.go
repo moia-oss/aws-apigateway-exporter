@@ -92,13 +92,13 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metric) error {
 	ctx := context.Background()
 	paginator := apigateway.NewGetRestApisPaginator(e.apigateway, &apigateway.GetRestApisInput{})
-	
+
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			return err
 		}
-		
+
 		for _, restAPI := range page.Items {
 			stagesResponse, stageErr := e.apigateway.GetStages(ctx, &apigateway.GetStagesInput{RestApiId: restAPI.Id})
 			if stageErr != nil {
@@ -128,13 +128,13 @@ func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) err
 	sugar.Info("collecting Usage Metrics")
 	ctx := context.Background()
 	paginator := apigateway.NewGetUsagePlansPaginator(e.apigateway, &apigateway.GetUsagePlansInput{})
-	
+
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			return err
 		}
-		
+
 		for _, plan := range page.Items {
 			today := time.Now().Format("2006-01-02")
 			usage, usageErr := e.apigateway.GetUsage(ctx, &apigateway.GetUsageInput{
@@ -180,7 +180,7 @@ func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) err
 			}
 		}
 	}
-	
+
 	return nil
 }
 
