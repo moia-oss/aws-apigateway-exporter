@@ -4,7 +4,7 @@ WORKDIR /exporter
 RUN make build-linux
 
 # Create minimal passwd and group files for non-root user
-RUN echo "appuser:x:9999:9999::/:" > /tmp/passwd && \
+RUN echo "appuser:x:9999:9999::/:/sbin/nologin" > /tmp/passwd && \
     echo "appusers:x:9999:" > /tmp/group
 
 FROM scratch
