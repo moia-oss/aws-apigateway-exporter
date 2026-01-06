@@ -17,6 +17,7 @@ package main
 */
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -25,11 +26,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/client"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -52,7 +51,7 @@ var (
 
 // Exporter collects metrics for API Gateway client certificates.
 type Exporter struct {
-	apigateway     *apigateway.APIGateway
+	apigateway     *apigateway.Client
 	expirationDate *prometheus.Desc
 	createdDate    *prometheus.Desc
 	up             *prometheus.Desc
@@ -91,84 +90,98 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metric) error {
-	return e.apigateway.GetRestApisPages(&apigateway.GetRestApisInput{},
-		func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
-			for _, restAPI := range page.Items {
-				stagesResponse, stageErr := e.apigateway.GetStages(&apigateway.GetStagesInput{RestApiId: restAPI.Id})
-				if stageErr != nil {
-					*up = 0
-					sugar.Errorf("Failed to get stages for API Gateway %s: %s", *restAPI.Id, stageErr)
-					continue
-				}
+	ctx := context.Background()
+	paginator := apigateway.NewGetRestApisPaginator(e.apigateway, &apigateway.GetRestApisInput{})
 
-				for _, stage := range stagesResponse.Item {
-					if stage.ClientCertificateId != nil {
-						cert, err := e.apigateway.GetClientCertificate(&apigateway.GetClientCertificateInput{ClientCertificateId: stage.ClientCertificateId})
-						if err != nil {
-							*up = 0
-							sugar.Errorf("Failed to get client certificates %s for API Gateway %s: %s", *stage.ClientCertificateId, *restAPI.Id, err)
-							continue
-						}
-						ch <- prometheus.MustNewConstMetric(e.expirationDate, prometheus.GaugeValue, float64(cert.ExpirationDate.Unix()), *cert.ClientCertificateId, *restAPI.Name)
-						ch <- prometheus.MustNewConstMetric(e.createdDate, prometheus.GaugeValue, float64(cert.CreatedDate.Unix()), *cert.ClientCertificateId, *restAPI.Name)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return err
+		}
+
+		for _, restAPI := range page.Items {
+			stagesResponse, stageErr := e.apigateway.GetStages(ctx, &apigateway.GetStagesInput{RestApiId: restAPI.Id})
+			if stageErr != nil {
+				*up = 0
+				sugar.Errorf("Failed to get stages for API Gateway %s: %s", *restAPI.Id, stageErr)
+				continue
+			}
+
+			for _, stage := range stagesResponse.Item {
+				if stage.ClientCertificateId != nil {
+					cert, err := e.apigateway.GetClientCertificate(ctx, &apigateway.GetClientCertificateInput{ClientCertificateId: stage.ClientCertificateId})
+					if err != nil {
+						*up = 0
+						sugar.Errorf("Failed to get client certificates %s for API Gateway %s: %s", *stage.ClientCertificateId, *restAPI.Id, err)
+						continue
 					}
+					ch <- prometheus.MustNewConstMetric(e.expirationDate, prometheus.GaugeValue, float64(cert.ExpirationDate.Unix()), *cert.ClientCertificateId, *restAPI.Name)
+					ch <- prometheus.MustNewConstMetric(e.createdDate, prometheus.GaugeValue, float64(cert.CreatedDate.Unix()), *cert.ClientCertificateId, *restAPI.Name)
 				}
 			}
-			return !lastPage
-		})
+		}
+	}
+	return nil
 }
 
 func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) error {
 	sugar.Info("collecting Usage Metrics")
-	return e.apigateway.GetUsagePlansPages(&apigateway.GetUsagePlansInput{},
-		func(page *apigateway.GetUsagePlansOutput, lastPage bool) bool {
-			for _, plan := range page.Items {
-				today := aws.String(time.Now().Format("2006-01-02"))
-				usage, usageErr := e.apigateway.GetUsage(&apigateway.GetUsageInput{
-					EndDate:     today,
-					StartDate:   today,
-					UsagePlanId: plan.Id,
-				})
-				if usageErr != nil {
-					*up = 0
-					sugar.Errorf("Failed to get usage data for API Usage Plan %s (%s): %s", *plan.Id, *plan.Name, usageErr)
-					continue
-				}
+	ctx := context.Background()
+	paginator := apigateway.NewGetUsagePlansPaginator(e.apigateway, &apigateway.GetUsagePlansInput{})
 
-				for key, val := range usage.Items {
-					ch <- prometheus.MustNewConstMetric(
-						e.usedQuota,
-						prometheus.GaugeValue,
-						// note that we always get the first element of val because we only ask for one day of data
-						float64(*val[0][0]),
-						*plan.Id,
-						*plan.Name,
-						key,
-					)
-					ch <- prometheus.MustNewConstMetric(
-						e.remainingQuota,
-						prometheus.GaugeValue,
-						// note that we always get the first element of val because we only ask for one day of data
-						float64(*val[0][1]),
-						*plan.Id,
-						*plan.Name,
-						key,
-					)
-				}
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return err
+		}
 
-				if plan.Quota != nil {
-					ch <- prometheus.MustNewConstMetric(
-						e.quotaLimit,
-						prometheus.GaugeValue,
-						float64(*plan.Quota.Limit),
-						*plan.Id,
-						*plan.Name,
-					)
-				}
+		for _, plan := range page.Items {
+			today := time.Now().Format("2006-01-02")
+			usage, usageErr := e.apigateway.GetUsage(ctx, &apigateway.GetUsageInput{
+				EndDate:     &today,
+				StartDate:   &today,
+				UsagePlanId: plan.Id,
+			})
+			if usageErr != nil {
+				*up = 0
+				sugar.Errorf("Failed to get usage data for API Usage Plan %s (%s): %s", *plan.Id, *plan.Name, usageErr)
+				continue
 			}
 
-			return !lastPage
-		})
+			for key, val := range usage.Items {
+				ch <- prometheus.MustNewConstMetric(
+					e.usedQuota,
+					prometheus.GaugeValue,
+					// note that we always get the first element of val because we only ask for one day of data
+					float64(val[0][0]),
+					*plan.Id,
+					*plan.Name,
+					key,
+				)
+				ch <- prometheus.MustNewConstMetric(
+					e.remainingQuota,
+					prometheus.GaugeValue,
+					// note that we always get the first element of val because we only ask for one day of data
+					float64(val[0][1]),
+					*plan.Id,
+					*plan.Name,
+					key,
+				)
+			}
+
+			if plan.Quota != nil {
+				ch <- prometheus.MustNewConstMetric(
+					e.quotaLimit,
+					prometheus.GaugeValue,
+					float64(plan.Quota.Limit),
+					*plan.Id,
+					*plan.Name,
+				)
+			}
+		}
+	}
+
+	return nil
 }
 
 func registerSignals() {
@@ -207,8 +220,11 @@ func main() {
 
 	sugar.Infof("Starting `aws-apigateway-exporter`: Build Time: '%s' Build SHA-1: '%s'\n", BuildTime, Version)
 
-	stsSession := session.Must(session.NewSession(&aws.Config{Region: region}))
-	exporter := createExporter(stsSession, region)
+	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(*region))
+	if err != nil {
+		sugar.Fatalf("Failed to load AWS config: %v", err)
+	}
+	exporter := createExporter(cfg, region)
 	prometheus.MustRegister(exporter)
 
 	mux := http.NewServeMux()
@@ -229,15 +245,14 @@ func main() {
 		}
 	})
 	sugar.Info("Listening on", *listenAddr)
-	err := http.ListenAndServe(*listenAddr, mux)
-	if err != nil {
+	if err := http.ListenAndServe(*listenAddr, mux); err != nil {
 		sugar.Errorf("Error on serving the requests %s", err)
 	}
 }
 
-func createExporter(stsSession client.ConfigProvider, region *string) *Exporter {
+func createExporter(cfg aws.Config, region *string) *Exporter {
 	return &Exporter{
-		apigateway: apigateway.New(stsSession),
+		apigateway: apigateway.NewFromConfig(cfg),
 		expirationDate: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "expiration_date"),
 			"The expiration date of the client certificate as Unix timestamp.",
