@@ -1,25 +1,18 @@
-# golangci.com configuration
-# https://github.com/golangci/golangci/wiki/Configuration
-service:
-  # use the fixed version to not introduce new linters unexpectedly
-  golangci-lint-version: 1.54.x
+version: "2"
 
 run:
-  # golang-ci lint runtime timeout
-  deadline: 5m
-  # moias latest supported Go version
-  go: "1.22"
-  # see: https://golangci-lint.run/usage/configuration/
-  modules-download-mode: readonly
+  # golangci-lint runtime timeout
+  timeout: 5m
+  go: "1.26"
+  # see: https://golangci-lint.run/docs/configuration/file/
+  modules-download-mode: vendor
   # include test files or not.
   tests: false
 
 linters:
   # Enable specific linter (not part of default linters)
-  # https://golangci-lint.run/usage/linters/#enabled-by-default-linters
+  # https://golangci-lint.run/docs/linters/
   enable:
-    # gofumpt as replacement for gofmt.
-    - gofumpt
     # revive as replacement for golint.
     - revive
     # whitespace to identify unnecessary whitespaces.
@@ -34,38 +27,37 @@ linters:
     - wrapcheck
     # misspell checks for spelling mistakes
     - misspell
-
-issues:
-  # independently of option `exclude` we use default exclude patterns
-  exclude-use-default: false
   # excluding configuration per-path, per-linter, per-text and per-source
-  exclude-rules:
-    - path: _test.go
-      linters:
-        - errcheck
-
-linters-settings:
-  # gofumpt settings
-  gofumpt:
-    extra-rules: true
-  # misspell settings
-  misspell:
-    locale: US
-  # revive settings
-  revive:
-    ignore-generated-header: true
-    severity: warning
+  exclusions:
+    generated: strict
     rules:
-      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unexported-return
-      - name: unexported-return
-        severity: warning
-        disabled: true
-  # gosec settings
-  gosec:
-    excludes:
-      # exclude random number check
-      - G404
-      # allowance of net/http serve function that has no support for setting timeouts
-      - G114
-  gocyclo:
-    min-complexity: 15
+      - path: _test.go
+        linters:
+          - errcheck
+  settings:
+    # misspell settings
+    misspell:
+      locale: US
+    # revive settings
+    revive:
+      severity: warning
+      rules:
+        # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unexported-return
+        - name: unexported-return
+          severity: warning
+          disabled: true
+    # gosec settings
+    gosec:
+      excludes:
+        # exclude random number check
+        - G404
+    gocyclo:
+      min-complexity: 15
+
+formatters:
+  enable:
+    # gofumpt as replacement for gofmt.
+    - gofumpt
+  settings:
+    gofumpt:
+      extra-rules: true

@@ -1,4 +1,4 @@
-# This overrides the default go command withenv Variables which are usually
+# This overrides the default go command with env variables which are usually
 # used in moia-dev repositories
 SYSTEM                := $(shell uname -s | tr A-Z a-z)_$(shell uname -m | sed "s/x86_64/amd64/" | sed "s/aarch64/arm64/")
 GO_PREFIX             := CGO_ENABLED=0 GOFLAGS=-mod=vendor GOPRIVATE=github.com/moia-dev
@@ -13,7 +13,7 @@ LINT_TARGETS          := $(shell find . -name '*.go' | sed -e "s|\(.*\)/.*\.go\$
 endif
 # The current version of golangci-lint.
 # See: https://github.com/golangci/golangci-lint/releases
-GOLANGCI_LINT_VERSION ?= 2.7.2
+GOLANGCI_LINT_VERSION ?= 2.12.2
 
 # Executes the linter on all our go files inside of the project
 .PHONY: lint create-golint-config
@@ -22,7 +22,7 @@ lint: bin/golangci-lint-$(GOLANGCI_LINT_VERSION)
 
 .PHONY: create-golint-config
 create-golint-config:
-	cp -n moia-mk-templates/assets/golangci.yml .golangci.yml || true
+	cp -n mk-templates/assets/golangci.yml .golangci.yml || true
 
 # Downloads the current golangci-lint executable into the bin directory and
 # makes it executable

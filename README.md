@@ -2,16 +2,16 @@
 
 Prometheus Exporter for details of AWS API Gateway metrics that are not available through CloudWatch but are
 available via the API. Currently, implemented are metrics about the client certificates and usage plans, especially
-the `created_date` and `expiry_date` of each certificate.
+the `created_date` and `expiration_date` of each certificate.
 
-The following metrics are then made available with the prefix `aws_apigateway_exporter_`.
-All metrics are gauge values:
+The exporter exposes the following gauge metrics. Metrics collected from AWS include a constant `region` label:
 
-* `expiration_date` with dimensions `client_certificate_id` and `api_gateway_name`
-* `created_date` with dimensions `client_certificate_id` and `api_gateway_name`
-* `used_quota` with dimensions `usage_plan_id`, `usage_plan_name`, and `usage_key_id`
-* `remaining_quota` with dimensions `usage_plan_id`, `usage_plan_name`, and `usage_key_id`
-* `quota_limit` with dimensions `usage_plan_id`, and `usage_plan_name`
+* `aws_apigateway_exporter_expiration_date` with labels `client_certificate_id`, `api_gateway_name`, and `region`
+* `aws_apigateway_exporter_created_date` with labels `client_certificate_id`, `api_gateway_name`, and `region`
+* `aws_apigateway_exporter_used_quota` with labels `usage_plan_id`, `usage_plan_name`, `usage_key_id`, and `region`
+* `aws_apigateway_exporter_remaining_quota` with labels `usage_plan_id`, `usage_plan_name`, `usage_key_id`, and `region`
+* `aws_apigateway_exporter_quota_limit` with labels `usage_plan_id`, `usage_plan_name`, and `region`
+* `aws_apigateway_exporter_up`
 
 ## Building and running
 
@@ -28,17 +28,22 @@ Resource:
   - "arn:aws:apigateway:eu-central-1::/usageplans*"
 ```
 
-Make sure your machine has Go 1.15 installed, then run `make docker-build` to build the service as well 
-as the docker image. You can also just use the provided docker images:
-https://gallery.ecr.aws/moia-oss/aws-apigateway-exporter
+Replace `eu-central-1` in the policy when running the exporter with another `--region`.
+
+Make sure your machine has Go 1.26 installed, then run `make build-linux` to build the Linux binary. To build
+both Linux and Darwin amd64 binaries, run `make build`. To build the container image, run `make docker-build`.
+You can also use the provided container images:
+https://gallery.ecr.aws/s6w2n1r6/aws-apigateway-exporter
 
 For running the latest provided image:
-`docker run -p 9389:9389 public.ecr.aws/moia-oss/aws-apigateway-exporter:latest`
+`docker run -p 9389:9389 public.ecr.aws/s6w2n1r6/aws-apigateway-exporter:latest`
 
-For running a local image:
-`docker run -p 9389:9389 moia/aws-apigateway-exporter`.
+For running a local image built by `make docker-build`:
+`docker run -p 9389:9389 moia/aws-apigateway-exporter:$(git describe --always --tags)`.
 
 Then Prometheus can scrape port 9389 for these metrics.
+
+The exporter defaults to `--listen-address=:9389` and `--region=eu-central-1`.
 
 ## Versioning on Public ECR
 
@@ -49,7 +54,7 @@ Every commit on `main` gets pushed as a new image with the `latest` tag.
 
 We recommend to use tagged versions in production.
 
-You can find the available tags on [AWS ECR Public Gallery](https://gallery.ecr.aws/moia-oss/aws-apigateway-exporter).
+You can find the available tags on [AWS ECR Public Gallery](https://gallery.ecr.aws/s6w2n1r6/aws-apigateway-exporter).
 
 ### Pushing a versioned image
 
