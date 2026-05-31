@@ -33,10 +33,10 @@ Replace `eu-central-1` in the policy when running the exporter with another `--r
 Make sure your machine has Go 1.26 installed, then run `make build-linux` to build the Linux binary. To build
 both Linux and Darwin amd64 binaries, run `make build`. To build the container image, run `make docker-build`.
 You can also use the provided container images:
-https://gallery.ecr.aws/s6w2n1r6/aws-apigateway-exporter
+https://gallery.ecr.aws/moia-oss/aws-apigateway-exporter
 
 For running the latest provided image:
-`docker run -p 9389:9389 public.ecr.aws/s6w2n1r6/aws-apigateway-exporter:latest`
+`docker run -p 9389:9389 public.ecr.aws/moia-oss/aws-apigateway-exporter:latest`
 
 For running a local image built by `make docker-build`:
 `docker run -p 9389:9389 moia/aws-apigateway-exporter:$(git describe --always --tags)`.
@@ -54,7 +54,7 @@ Every commit on `main` gets pushed as a new image with the `latest` tag.
 
 We recommend to use tagged versions in production.
 
-You can find the available tags on [AWS ECR Public Gallery](https://gallery.ecr.aws/s6w2n1r6/aws-apigateway-exporter).
+You can find the available tags on [AWS ECR Public Gallery](https://gallery.ecr.aws/moia-oss/aws-apigateway-exporter).
 
 ### Pushing a versioned image
 
