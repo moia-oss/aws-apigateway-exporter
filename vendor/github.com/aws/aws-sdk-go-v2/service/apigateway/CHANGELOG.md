@@ -1,3 +1,36 @@
+# v1.39.3 (2026-04-29)
+
+* **Dependency Update**: Update to smithy-go v1.25.1.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.39.2 (2026-04-17)
+
+* **Dependency Update**: Bump smithy-go to 1.25.0 to support endpointBdd trait
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.39.1 (2026-03-26)
+
+* **Bug Fix**: Fix a bug where a recorded clock skew could persist on the client even if the client and server clock ended up realigning.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.39.0 (2026-03-13)
+
+* **Feature**: API Gateway now supports an additional security policy "SecurityPolicy-TLS13-1-2-FIPS-PFS-PQ-2025-09" for REST APIs and custom domain names. The new policy is compliant with TLS 1.3, Federal Information Processing Standards (FIPS), Perfect Forward Secrecy (PFS), and post-quantum (PQ) cryptography
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.38.6 (2026-03-03)
+
+* **Dependency Update**: Bump minimum Go version to 1.24
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.38.5 (2026-02-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.38.4 (2026-01-09)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.38.3 (2025-12-08)
 
 * **Dependency Update**: Updated to the latest SDK module versions
