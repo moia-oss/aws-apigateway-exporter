@@ -1,4 +1,4 @@
-FROM golang:1.25.5 AS builder
+FROM golang:1.26.3 AS builder
 COPY ./ /exporter/
 WORKDIR /exporter
 RUN make build-linux
