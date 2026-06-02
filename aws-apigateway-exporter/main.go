@@ -40,9 +40,9 @@ const (
 )
 
 var (
-	// BuildTime represents the time of the build
+	// BuildTime represents the time of the build.
 	BuildTime = "N/A"
-	// Version represents the Build SHA-1 of the binary
+	// Version represents the Build SHA-1 of the binary.
 	Version = "N/A"
 
 	logger *zap.Logger
@@ -60,7 +60,7 @@ type Exporter struct {
 	quotaLimit     *prometheus.Desc
 }
 
-// Describe implements prometheus.Collector interface
+// Describe implements prometheus.Collector interface.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.expirationDate
 	ch <- e.createdDate
@@ -70,7 +70,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- e.quotaLimit
 }
 
-// Collect implements prometheus.Collector interface
+// Collect implements prometheus.Collector interface.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	up := 1 // indicates any error while scraping
 
@@ -81,7 +81,6 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	err = e.collectCertificateMetrics(&up, ch)
-
 	if err != nil {
 		up = 0
 		sugar.Errorf("Failed to get api gateways %s", err)
@@ -96,14 +95,22 @@ func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metri
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("get API Gateway REST APIs: %w", err)
 		}
 
 		for _, restAPI := range page.Items {
-			stagesResponse, stageErr := e.apigateway.GetStages(ctx, &apigateway.GetStagesInput{RestApiId: restAPI.Id})
+			apiID := aws.ToString(restAPI.Id)
+			if apiID == "" {
+				*up = 0
+				sugar.Warn("Skipping API Gateway without an ID")
+				continue
+			}
+			apiName := aws.ToString(restAPI.Name)
+
+			stagesResponse, stageErr := e.apigateway.GetStages(ctx, &apigateway.GetStagesInput{RestApiId: aws.String(apiID)})
 			if stageErr != nil {
 				*up = 0
-				sugar.Errorf("Failed to get stages for API Gateway %s: %s", *restAPI.Id, stageErr)
+				sugar.Errorf("Failed to get stages for API Gateway %s: %s", apiID, stageErr)
 				continue
 			}
 
@@ -112,11 +119,17 @@ func (e *Exporter) collectCertificateMetrics(up *int, ch chan<- prometheus.Metri
 					cert, err := e.apigateway.GetClientCertificate(ctx, &apigateway.GetClientCertificateInput{ClientCertificateId: stage.ClientCertificateId})
 					if err != nil {
 						*up = 0
-						sugar.Errorf("Failed to get client certificates %s for API Gateway %s: %s", *stage.ClientCertificateId, *restAPI.Id, err)
+						sugar.Errorf("Failed to get client certificates %s for API Gateway %s: %s", *stage.ClientCertificateId, apiID, err)
 						continue
 					}
-					ch <- prometheus.MustNewConstMetric(e.expirationDate, prometheus.GaugeValue, float64(cert.ExpirationDate.Unix()), *cert.ClientCertificateId, *restAPI.Name)
-					ch <- prometheus.MustNewConstMetric(e.createdDate, prometheus.GaugeValue, float64(cert.CreatedDate.Unix()), *cert.ClientCertificateId, *restAPI.Name)
+					certID := aws.ToString(cert.ClientCertificateId)
+					if certID == "" || cert.ExpirationDate == nil || cert.CreatedDate == nil {
+						*up = 0
+						sugar.Warnf("Skipping incomplete client certificate %s for API Gateway %s", aws.ToString(stage.ClientCertificateId), apiID)
+						continue
+					}
+					ch <- prometheus.MustNewConstMetric(e.expirationDate, prometheus.GaugeValue, float64(cert.ExpirationDate.Unix()), certID, apiName)
+					ch <- prometheus.MustNewConstMetric(e.createdDate, prometheus.GaugeValue, float64(cert.CreatedDate.Unix()), certID, apiName)
 				}
 			}
 		}
@@ -132,39 +145,50 @@ func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) err
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("get API Gateway usage plans: %w", err)
 		}
 
 		for _, plan := range page.Items {
+			planID := aws.ToString(plan.Id)
+			if planID == "" {
+				*up = 0
+				sugar.Warn("Skipping usage plan without an ID")
+				continue
+			}
+			planName := aws.ToString(plan.Name)
 			today := time.Now().Format("2006-01-02")
 			usage, usageErr := e.apigateway.GetUsage(ctx, &apigateway.GetUsageInput{
 				EndDate:     &today,
 				StartDate:   &today,
-				UsagePlanId: plan.Id,
+				UsagePlanId: aws.String(planID),
 			})
 			if usageErr != nil {
 				*up = 0
-				sugar.Errorf("Failed to get usage data for API Usage Plan %s (%s): %s", *plan.Id, *plan.Name, usageErr)
+				sugar.Errorf("Failed to get usage data for API Usage Plan %s (%s): %s", planID, planName, usageErr)
 				continue
 			}
 
 			for key, val := range usage.Items {
+				used, remaining, ok := usageValuesForToday(val)
+				if !ok {
+					*up = 0
+					sugar.Warnf("Skipping unexpected usage data for API Usage Plan %s (%s) and usage key %s", planID, planName, key)
+					continue
+				}
 				ch <- prometheus.MustNewConstMetric(
 					e.usedQuota,
 					prometheus.GaugeValue,
-					// note that we always get the first element of val because we only ask for one day of data
-					float64(val[0][0]),
-					*plan.Id,
-					*plan.Name,
+					float64(used),
+					planID,
+					planName,
 					key,
 				)
 				ch <- prometheus.MustNewConstMetric(
 					e.remainingQuota,
 					prometheus.GaugeValue,
-					// note that we always get the first element of val because we only ask for one day of data
-					float64(val[0][1]),
-					*plan.Id,
-					*plan.Name,
+					float64(remaining),
+					planID,
+					planName,
 					key,
 				)
 			}
@@ -174,14 +198,21 @@ func (e *Exporter) collectUsageMetrics(up *int, ch chan<- prometheus.Metric) err
 					e.quotaLimit,
 					prometheus.GaugeValue,
 					float64(plan.Quota.Limit),
-					*plan.Id,
-					*plan.Name,
+					planID,
+					planName,
 				)
 			}
 		}
 	}
 
 	return nil
+}
+
+func usageValuesForToday(values [][]int64) (used, remaining int64, ok bool) {
+	if len(values) == 0 || len(values[0]) < 2 {
+		return 0, 0, false
+	}
+	return values[0][0], values[0][1], true
 }
 
 func registerSignals() {
@@ -245,7 +276,12 @@ func main() {
 		}
 	})
 	sugar.Info("Listening on", *listenAddr)
-	if err := http.ListenAndServe(*listenAddr, mux); err != nil {
+	server := &http.Server{
+		Addr:              *listenAddr,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
 		sugar.Errorf("Error on serving the requests %s", err)
 	}
 }
