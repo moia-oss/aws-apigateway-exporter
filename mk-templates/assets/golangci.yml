@@ -3,7 +3,7 @@ version: "2"
 run:
   # golangci-lint runtime timeout
   timeout: 5m
-  go: "1.26"
+  go: "1.27"
   # see: https://golangci-lint.run/docs/configuration/file/
   modules-download-mode: vendor
   # include test files or not.
