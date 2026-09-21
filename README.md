@@ -30,7 +30,7 @@ Resource:
 
 Replace `eu-central-1` in the policy when running the exporter with another `--region`.
 
-Make sure your machine has Go 1.26 installed, then run `make build-linux` to build the Linux binary. To build
+Make sure your machine has Go 1.27 installed, then run `make build-linux` to build the Linux binary. To build
 both Linux and Darwin amd64 binaries, run `make build`. To build the container image, run `make docker-build`.
 You can also use the provided container images:
 https://gallery.ecr.aws/moia-oss/aws-apigateway-exporter
